@@ -7,12 +7,25 @@ output:
 
 
 ## Loading and preprocessing the data
+```{r}
+  require('data.table')
+  if(!file.exists("activity.csv")){ unzip("activity.zip") }
+  dt <- fread('activity.csv')
+  # convert date columns to an actual date
+  datetime <- paste(dt$date, sprintf("%04s", dt$interval))
+  dt <- dt[,datetime := as.POSIXct(strptime(datetime, "%Y-%m-%d %H%M"))]
+  # add the day of week as a new column
+  dt <- dt[,dayofweek := as.factor(toupper(strftime(dt$datetime, format="%a")))]
 
-
+```
 
 ## What is mean total number of steps taken per day?
-
-
+```{r}
+  require('dplyr')
+  stepsbydate <- dt[,lapply(.SD,sum),by="date",.SDcols=c("steps")]
+  hist(stepsbydate$steps)
+  mean(stepsbydate$steps, na.rm=T)
+```
 
 ## What is the average daily activity pattern?
 

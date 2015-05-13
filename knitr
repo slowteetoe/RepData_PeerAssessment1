@@ -1,0 +1,26 @@
+#!/bin/bash
+
+FILE="${1}"
+
+if [[ $# != 1 ]]; then
+    echo "Usage: knitr <file> where <file> is an .Rmd file.  Do NOT specify the extension, e.g. test.Rmd should be provided as test"
+    exit
+fi
+
+if [[ ! -f "${FILE}.Rmd" ]]; then
+    echo "Uh oh."
+    echo "It looks like the file you provided me doesn't exist: ${FILE}"
+    exit
+fi
+
+hash kicker 2> /dev/null || {
+    echo "Oh dear. I require Kicker to work"
+    echo "Install it with:"
+    echo "    $ gem install kicker"
+    exit
+}
+
+KNITR="echo \"Rerunning Knitr...\"; Rscript -e \"library('knitr'); library('markdown');  knit('./${FILE}.Rmd'); markdownToHTML('${FILE}.md', '${FILE}.html', options=c('use_xhtml', 'base64_images')); browseURL(paste('file://', file.path(getwd(),'${FILE}.html'), sep=''))\""
+
+echo "Watching ${FILE}..."
+kicker -e "${KNITR}" ${FILE}.Rmd
