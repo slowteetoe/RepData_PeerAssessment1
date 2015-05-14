@@ -56,12 +56,28 @@ Note that there are a number of days/intervals where there are missing values (c
   sum(is.na(dt$steps))
 ```
 
-2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.  Create a new dataset that is equal to the original dataset but with the missing data filled in.
+2. Devise a strategy for filling in all of the missing values in the dataset:
+``` The chosen imputing strategy is to fill in NA values with the mean for the corresponding 5-minute interval ```
+```{r}
+  filled <- dt
+  for(i in 1:nrow(filled)){
+    if(is.na(filled[[i,1]])){
+      filled[[i,1]] <- avgsteps[avgsteps$interval==filled[[i,3]],]$steps
+    }
+  }
+```
 
 3. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day.
-  1. Do these values differ from the estimates from the first part of the assignment? 
+```{r}
+  filledstepsbydate <- filled[,lapply(.SD,sum),by="date",.SDcols=c("steps")]
+  hist(filledstepsbydate$steps, main="Total number of steps taken each day", xlab="Number of steps") 
+  mean(filledstepsbydate$steps, na.rm=T)
+  median(filledstepsbydate$steps, na.rm=T)
+```
+  1. Do these values differ from the estimates from the first part of the assignment?
+    * The mean remains the same, because we used the mean to fill-in the missing values.  The median changes slightly, because there were now more datapoints to calculate (since we were omitting NA before, and now we have filled those NAs with a single value (the mean from that interval).
   2. What is the impact of imputing missing data on the estimates of the total daily number of steps?
-
+    * This artificially inflates the total daily number of steps because every unrecorded (NA) value has been replaced by the mean of that interval.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
@@ -75,4 +91,9 @@ Note that there are a number of days/intervals where there are missing values (c
   dt <- dt[,typeofday := sapply(dt$dayofweek, dayclassifier)]
 ```
 
-2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+```{r}
+  library(lattice)
+  msteps <- aggregate(list(steps=dt$steps), list(interval=dt$interval,typeofday=dt$typeofday),  mean, na.rm=T)
+  xyplot(steps ~ interval | typeofday, data = msteps, type="l", xlab="Interval", ylab="Number of steps", layout=c(1,2))
+```
