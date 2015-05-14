@@ -17,9 +17,6 @@ output:
   # convert date columns to an actual date
   datetime <- paste(dt$date, sprintf("%04s", dt$interval))
   dt <- dt[,datetime := as.POSIXct(strptime(datetime, "%Y-%m-%d %H%M"))]
-
-  # add the day of week as a new column
-  dt <- dt[,dayofweek := as.factor(toupper(strftime(dt$datetime, format="%a")))]
 ```
 
 ## What is mean total number of steps taken per day?
@@ -55,6 +52,9 @@ output:
 Note that there are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
 
 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+```{r}
+  sum(is.na(dt$steps))
+```
 
 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.  Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
@@ -64,8 +64,15 @@ Note that there are a number of days/intervals where there are missing values (c
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
-For this part the weekdays() function may be of some help here. Use the dataset with the filled-in missing values for this part.
 
 1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+```{r}
+  # add the day of week as a new column
+  dt <- dt[,dayofweek := as.factor(toupper(strftime(dt$datetime, format="%a")))]
+
+  # create a helper function to classify as weekend or weekday
+  dayclassifier <- function(x){ if( x == "SAT" | x == "SUN" ) { as.factor("WEEKEND") } else { as.factor("WEEKDAY") } }
+  dt <- dt[,typeofday := sapply(dt$dayofweek, dayclassifier)]
+```
 
 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
